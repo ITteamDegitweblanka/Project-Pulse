@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Project Pulse Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              'brand-primary': '#4f46e5',
+              'brand-secondary': '#7c3aed',
+              // Dark theme
+              'dark-bg': '#111827',
+              'dark-login-bg': '#111827',
+              'dark-card': '#1f2937',
+              'dark-input': '#374151',
+              'dark-border': '#4b5563',
+              'dark-text-primary': '#f9fafb',
+              'dark-text-secondary': '#9ca3af',
+              // Light theme
+              'light-bg': '#f3f4f6',
+              'light-card': '#ffffff',
+              'light-border': '#e5e7eb',
+              'light-text-primary': '#1f2937',
+              'light-text-secondary': '#4b5563',
+            },
+            animation: {
+              'fade-in': 'fadeIn 0.5s ease-out',
+            },
+            keyframes: {
+                fadeIn: {
+                    'from': { opacity: 0, transform: 'translateY(-10px)' },
+                    'to': { opacity: 1, transform: 'translateY(0)' },
+                }
+            }
+          },
+        },
+      }
+    </script>
+  <script type="importmap">
+{
+  "imports": {
+    "react-dom/": "https://esm.sh/react-dom@^19.1.0/",
+    "react/": "https://esm.sh/react@^19.1.0/",
+    "react": "https://esm.sh/react@^19.1.0",
+    "@google/genai": "https://esm.sh/@google/genai@^1.10.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body class="bg-light-bg text-light-text-primary dark">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>

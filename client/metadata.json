@@ -1,0 +1,6 @@
+{
+  "name": "MD Project Pulse Dashboard",
+  "description": "A comprehensive dashboard to manage projects, track tasks, and monitor team workload. It features AI-powered task generation to streamline project planning.",
+  "requestFramePermissions": [],
+  "prompt": ""
+}
