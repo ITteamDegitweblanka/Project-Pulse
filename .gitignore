@@ -1,36 +1,45 @@
 # Dependencies
 node_modules/
-server/node_modules/
 client/node_modules/
+server/node_modules/
 
 # Build outputs
-/dist/
-client/dist/
-server/dist/
-/build/
+dist/
+build/
+.next/
+out/
+coverage/
 
-# Logs
+# Logs and caches
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+.pnpm-store/
+.parcel-cache/
+.turbo/
+.cache/
 
-# Env files
+# Environment files
 .env
+.env.*
 server/.env
 client/.env
 
-# IDE/editor
-.vscode/
-*.code-workspace
+# Editor/OS
 .DS_Store
+.vscode/
 Thumbs.db
 
-# Misc caches
-.cache/
-.next/
-coverage/
+# Generated
+*.tsbuildinfo
 
-# Local config
+# Misc
 *.local
+*.swp
+
+# Media and nested repos
+video/
+Project_pulse/.git/
