@@ -110,6 +110,7 @@ export async function addProject(project: any) {
     allocatedHours: project.allocatedHours != null ? Number(project.allocatedHours) : undefined,
     usedHours: project.usedHours != null ? Number(project.usedHours) : undefined,
     milestoneDate: project.milestoneDate ?? project.end_date,
+    parentId: project.parentId ? String(project.parentId) : undefined,
   };
   const res = await fetch(`${API_BASE}/api/projects`, {
     method: 'POST',
@@ -121,6 +122,30 @@ export async function addProject(project: any) {
 }
 
 // Add more API functions as needed
+
+// Blockers & Issues API
+export async function updateRiskIssue(id, data) {
+  const res = await fetch(`${API_BASE}/api/risks-issues/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  });
+  if (!res.ok) throw new Error('Failed to update risk/issue');
+  return res.json();
+}
+export async function getRiskIssues() {
+  return fetchJSON(`${API_BASE}/api/risks-issues`);
+}
+
+export async function addRiskIssue(data) {
+  const res = await fetch(`${API_BASE}/api/risks-issues`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  });
+  if (!res.ok) throw new Error('Failed to add risk/issue');
+  return res.json();
+}
 
 export async function getTeamMembers() {
   return fetchJSON(`${API_BASE}/api/users`);

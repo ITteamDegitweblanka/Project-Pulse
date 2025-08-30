@@ -166,6 +166,7 @@ export interface ExecutiveSummary {
   totalProjects: { value: { total: number; parent: number; children: number; }; changeText: string };
   totalAllocatedHours: { value: number; changeText: string };
   openIssues: { value: number; changeText: string };
+  openBlockers: { value: number; changeText: string };
   teamMembers: { value: number; changeText: string };
   ragDistribution: {
     green: number;

@@ -365,7 +365,7 @@ const AddProjectModal: React.FC<AddProjectModalProps> = ({
       setError('Please enter a valid, positive number for allocated hours.');
       return;
     }
-    if ((isSubProject || editingProject?.parentId) && (isNaN(weightValue) || weightValue <= 0 || weightValue > 100)) {
+    if ((isSubProject || editingProject?.parent_id) && (isNaN(weightValue) || weightValue <= 0 || weightValue > 100)) {
       setError('Please enter a valid weight between 1 and 100.');
       return;
     }
@@ -417,8 +417,8 @@ const AddProjectModal: React.FC<AddProjectModalProps> = ({
       name: name.trim(),
       allocatedHours: hours,
       leadId,
-      team_id: Number(teamId),
-      parentId: parentId || undefined,
+  team_id: Number(teamId),
+  parentId: isSubProject ? String(parentId ?? '') : undefined,
       weight: isSubProject ? weightValue : undefined,
       users: projectUsers,
       frequency: finalFrequency,
@@ -460,7 +460,7 @@ const AddProjectModal: React.FC<AddProjectModalProps> = ({
     name,
     onAddProject,
     onUpdateProject,
-    parentId,
+  parentId,
     specificDates,
     totalExpectedSavedHours,
     twiceAMonthDate1,
@@ -729,7 +729,7 @@ const AddProjectModal: React.FC<AddProjectModalProps> = ({
           </FormField>
         </div>
 
-        {(isSubProject || editingProject?.parentId) && (
+        {(isSubProject || editingProject?.parent_id) && (
           <FormField label="Weight (%)">
             <input 
               type="number" 
@@ -742,7 +742,7 @@ const AddProjectModal: React.FC<AddProjectModalProps> = ({
               placeholder="e.g., 25" 
               min="1" 
               max="100" 
-              required={isSubProject || !!editingProject?.parentId} 
+              required={isSubProject || !!editingProject?.parent_id} 
             />
           </FormField>
         )}

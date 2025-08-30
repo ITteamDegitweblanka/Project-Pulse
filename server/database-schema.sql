@@ -1,3 +1,5 @@
+-- Add parentId column to projects table for sub-project support
+
 -- Department
 CREATE TABLE departments (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -16,10 +18,23 @@ CREATE TABLE project_phases (
 
 CREATE TABLE risk_levels (
     id INT PRIMARY KEY AUTO_INCREMENT,
+    title VARCHAR(100) NOT NULL,
+    priority VARCHAR(20),
+    severity VARCHAR(20),
+    deadline DATETIME,
+    assignee_id INT,
+    reason TEXT,
+    lastUpdated DATETIME,
     level VARCHAR(20) NOT NULL,
     description TEXT,
     color VARCHAR(20),
-    status VARCHAR(20) DEFAULT 'Active'
+    status VARCHAR(20) DEFAULT 'Active',
+    CONSTRAINT fk_assignee_id 
+    FOREIGN KEY (assignee_id) REFERENCES users(id),
+    CONSTRAINT fk_project_id
+    FOREIGN KEY (project_id) REFERENCES projects(id)
+    ON DELETE SET NULL
+    ON UPDATE CASCADE
 );
 -- Insert initial risk levels
 INSERT INTO risk_levels (id, name, description, color, status) VALUES
@@ -63,6 +78,7 @@ CREATE TABLE users (
     officeLocation VARCHAR(100),
     status VARCHAR(20),
     joined_at DATETIME,
+    subTeamLeaderId INT NULL,
     profile_picture_url VARCHAR(255),
     FOREIGN KEY (team_id) REFERENCES teams(id)
 );
@@ -74,6 +90,7 @@ ADD CONSTRAINT fk_lead_id FOREIGN KEY (lead_id) REFERENCES users(id);
 -- Project
 CREATE TABLE projects (
     id INT PRIMARY KEY AUTO_INCREMENT,
+    parent_id INT NULL,
     name VARCHAR(100) NOT NULL,
     description TEXT,
     end_date DATE,
@@ -134,13 +151,21 @@ CREATE TABLE risks_issues (
     id INT PRIMARY KEY AUTO_INCREMENT,
     project_id INT,
     reported_by INT,
+    title VARCHAR(100) NOT NULL,
+    priority VARCHAR(20),
+    severity VARCHAR(20),
+    deadline DATETIME,
+    assignee_id INT,
+    reason TEXT,
+    lastUpdated DATETIME,
     type VARCHAR(10),
     description TEXT,
     status VARCHAR(20),
     created_at DATETIME,
     resolved_at DATETIME,
     FOREIGN KEY (project_id) REFERENCES projects(id),
-    FOREIGN KEY (reported_by) REFERENCES users(id)
+    FOREIGN KEY (reported_by) REFERENCES users(id),
+    FOREIGN KEY (assignee_id) REFERENCES users(id)
 );
 
 -- Audit Log

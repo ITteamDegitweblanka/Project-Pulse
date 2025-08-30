@@ -170,11 +170,13 @@ const RisksAndIssuesView: React.FC<RisksAndIssuesViewProps> = ({ tasks, projects
                                         <p className="text-xs text-light-text-secondary dark:text-dark-text-secondary mt-1 truncate">{item.description}</p>
                                     </td>
                                     <td className="px-6 py-4">
-                                        {project && (
+                                        {project ? (
                                             <div>
                                                 <div className="font-medium text-sm text-blue-600 dark:text-blue-400 hover:underline cursor-pointer" onClick={() => onSelectProject(project.id)}>{project.name}</div>
                                                 <div className="text-xs text-light-text-secondary dark:text-dark-text-secondary">{project.code}</div>
                                             </div>
+                                        ) : (
+                                            <span className="text-xs text-red-400 italic">Project not available</span>
                                         )}
                                     </td>
                                     <td className="px-6 py-4">{item.severity && <SeverityIndicator severity={item.severity} />}</td>

@@ -704,11 +704,16 @@ const ProjectDetailView: React.FC<ProjectDetailViewProps> = (props) => {
         const hoursUsagePercent = allocatedHours > 0 ? (usedHours / allocatedHours) * 100 : 0;
         
         const descendantIds = [project.id, ...children.map(c => c.id)];
-        const relevantTasks = tasks.filter(t => descendantIds.includes(t.projectId));
+                const relevantTasks = tasks.filter(t => descendantIds.includes(t.projectId));
 
-        const isBehindOnTasks = relevantTasks.some(t => new Date(t.deadline) < new Date() && t.status !== TaskStatus.Completed);
-        const issues = relevantTasks.filter(t => t.type === 'issue' && t.status !== TaskStatus.Completed);
-        const risks = relevantTasks.filter(t => t.type === 'risk' && t.status !== TaskStatus.Completed);
+                const isBehindOnTasks = relevantTasks.some(t => new Date(t.deadline) < new Date() && t.status !== TaskStatus.Completed);
+                // Only show open issues/blockers for the current project
+                const issues = tasks.filter(
+                    t => t.type === 'issue' && t.status !== TaskStatus.Completed && t.projectId === project.id
+                );
+                const risks = tasks.filter(
+                    t => t.type === 'risk' && t.status !== TaskStatus.Completed && t.projectId === project.id
+                );
 
         // New Health Status logic based on progress vs. time usage
         const calculateHealthStatus = (
@@ -836,26 +841,24 @@ const ProjectDetailView: React.FC<ProjectDetailViewProps> = (props) => {
             </div>
 
             {!isParent && <ProjectTimerCard project={project} onProjectTimerAction={onProjectTimerAction} />}
-            
+
             <ProjectHistoryCard projectId={project.id} auditLogs={auditLogs} membersById={membersById} />
 
-            {isParent && (
-                <SubProjectsCard
-                    subProjects={children}
-                    allProjects={projects}
-                    allTasks={tasks}
-                    membersById={membersById}
-                    onAddSubProject={onAddSubProject}
-                    onUpdateProject={onUpdateProject}
-                    onProjectTimerAction={onProjectTimerAction}
-                    onNavigateToRisksForProject={onNavigateToRisksForProject}
-                    currentUser={currentUser}
-                    onOpenCompleteProjectModal={onOpenCompleteProjectModal}
-                    onOpenNotSatisfiedModal={onOpenNotSatisfiedModal}
-                    onOpenCompletedBlockedModal={onOpenCompletedBlockedModal}
-                    onOpenSelectToolsModal={onOpenSelectToolsModal}
-                />
-            )}
+            <SubProjectsCard
+                subProjects={projects.filter(p => String(p.parent_id) === String(project.id))}
+                allProjects={projects}
+                allTasks={tasks}
+                membersById={membersById}
+                onAddSubProject={onAddSubProject}
+                onUpdateProject={onUpdateProject}
+                onProjectTimerAction={onProjectTimerAction}
+                onNavigateToRisksForProject={onNavigateToRisksForProject}
+                currentUser={currentUser}
+                onOpenCompleteProjectModal={onOpenCompleteProjectModal}
+                onOpenNotSatisfiedModal={onOpenNotSatisfiedModal}
+                onOpenCompletedBlockedModal={onOpenCompletedBlockedModal}
+                onOpenSelectToolsModal={onOpenSelectToolsModal}
+            />
         </div>
     );
 };

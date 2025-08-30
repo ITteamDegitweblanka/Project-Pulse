@@ -30,7 +30,13 @@ exports.getProjectById = (req, res) => {
 };
 
 exports.createProject = (req, res) => {
+  console.log('DEBUG: Incoming req.body:', req.body);
   const newProject = { ...req.body };
+  // Map parentId to parent_id for MySQL, handle string/number
+  if ('parentId' in newProject && newProject.parentId != null && String(newProject.parentId).trim() !== '') {
+    newProject.parent_id = parseInt(newProject.parentId, 10);
+    delete newProject.parentId;
+  }
   // Serialize JSON fields
   if (newProject.team) newProject.team = JSON.stringify(newProject.team);
   if (newProject.users) newProject.users = JSON.stringify(newProject.users);
@@ -48,9 +54,21 @@ exports.createProject = (req, res) => {
   // Keep timerStartTime as provided; DB will store DATETIME without TZ
   // Remove any createdAt field to avoid MySQL error
   delete newProject.createdAt;
+  console.log('DEBUG: FINAL newProject object for DB insert:', newProject);
+  if ('parent_id' in newProject) {
+    console.log('DEBUG: parent_id value before DB insert:', newProject.parent_id, 'typeof:', typeof newProject.parent_id);
+  } else {
+    console.log('DEBUG: parent_id is missing from newProject before DB insert');
+  }
   Project.create(newProject, (err, result) => {
     if (err) return res.status(500).json({ error: err });
-    res.status(201).json({ id: result.insertId, ...newProject });
+    // Fetch the full project from DB to ensure parent_id is included
+    Project.getById(result.insertId, (err2, rows) => {
+      if (err2 || !rows || !rows.length) {
+        return res.status(201).json({ id: result.insertId, ...newProject });
+      }
+      res.status(201).json(parseProjectJsonFields(rows[0]));
+    });
   });
 };
 

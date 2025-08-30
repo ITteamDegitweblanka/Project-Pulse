@@ -67,6 +67,7 @@ const App: React.FC = () => {
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [riskIssues, setRiskIssues] = useState<any[]>([]); // Blockers & Issues from backend
   const [toDos, setToDos] = useState<ToDo[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [leave, setLeave] = useState<Leave[]>([]);
@@ -150,14 +151,15 @@ const App: React.FC = () => {
   };
 
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-  const [
-            membersData, 
-            projectsData, 
-            tasksData, 
+      const loadData = async () => {
+        try {
+          setIsLoading(true);
+          setError(null);
+          const [
+            membersData,
+            projectsData,
+            tasksData,
+            riskIssuesData,
             toDosData,
             leaveData,
             auditLogsData,
@@ -167,69 +169,71 @@ const App: React.FC = () => {
             riskLevelsData,
             teamsData,
             toolsData,
-        ] = await Promise.all([
-          api.getTeamMembers(),
-          api.getProjects(),
-          api.getTasks(),
-          api.getToDos(),
-          api.getLeave(),
-          api.getAuditLogs(),
-          api.getSystemConfiguration(),
-          api.getProjectPhases(),
-          api.getDepartments(),
-          api.getRiskLevels(),
-          api.getTeams(),
-          api.getTools(),
-        ]);
-        // Normalize members: ensure string IDs and teamId
-        const normalizedMembers = membersData.map(m => ({
-          ...m,
-          id: String(m.id),
-          teamId: (m.teamId ?? m.team_id ?? undefined) ? String(m.teamId ?? m.team_id) : undefined,
-          subTeamLeaderId: m.subTeamLeaderId != null ? String(m.subTeamLeaderId) : m.subTeamLeaderId,
-        }));
-        setTeamMembers(normalizedMembers);
+          ] = await Promise.all([
+            api.getTeamMembers(),
+            api.getProjects(),
+            api.getTasks(),
+            api.getRiskIssues(), // Fetch blockers/issues from backend
+            api.getToDos(),
+            api.getLeave(),
+            api.getAuditLogs(),
+            api.getSystemConfiguration(),
+            api.getProjectPhases(),
+            api.getDepartments(),
+            api.getRiskLevels(),
+            api.getTeams(),
+            api.getTools(),
+          ]);
+          // Normalize members: ensure string IDs and teamId
+          const normalizedMembers = membersData.map(m => ({
+            ...m,
+            id: String(m.id),
+            teamId: (m.teamId ?? m.team_id ?? undefined) ? String(m.teamId ?? m.team_id) : undefined,
+            subTeamLeaderId: m.subTeamLeaderId != null ? String(m.subTeamLeaderId) : m.subTeamLeaderId,
+          }));
+          setTeamMembers(normalizedMembers);
 
-        // Normalize teams: ensure string IDs
-        const normalizedTeams = teamsData.map(t => ({ ...t, id: String(t.id) }));
-        setTeams(normalizedTeams);
+          // Normalize teams: ensure string IDs
+          const normalizedTeams = teamsData.map(t => ({ ...t, id: String(t.id) }));
+          setTeams(normalizedTeams);
 
-        // Normalize projects from DB shape to frontend shape
-        const normalizedProjects = projectsData.map((p: any) => {
-          const users = Array.isArray(p.users) ? p.users.map((u: any) => ({ ...u, id: String(u.id) })) : p.users;
-          return {
-            ...p,
-            id: String(p.id),
-            leadId: String(p.leadId ?? p.owner_id ?? p.lead_id ?? ''),
-            teamId: (p.teamId ?? p.team_id) != null ? String(p.teamId ?? p.team_id) : undefined,
-            usedHours: Math.max(0, Number(p.usedHours) || 0),
-            allocatedHours: Number(p.allocatedHours) || 0,
-            additionalHours: Number(p.additionalHours) || 0,
-            savedHours: p.savedHours != null ? Number(p.savedHours) : p.savedHours,
-            expectedSavedHours: p.expectedSavedHours != null ? Number(p.expectedSavedHours) : p.expectedSavedHours,
-            users,
-          } as any;
-        });
-        setProjects(normalizedProjects as any);
-        setTasks(tasksData);
-        setToDos(toDosData);
-        setLeave(leaveData);
-        setAuditLogs(auditLogsData);
-        setSystemConfiguration(configData);
-        setProjectPhases(phasesData);
-        setDepartments(deptsData);
-        setRiskLevels(riskLevelsData);
-        setTools(toolsData);
-      } catch (err) {
-        const message = err instanceof Error ? err.message : 'An unknown error occurred.';
-        setError(`Failed to load dashboard data. Please try again later. (${message})`);
-        console.error(err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    loadData();
-  }, []);
+          // Normalize projects from DB shape to frontend shape
+          const normalizedProjects = projectsData.map((p: any) => {
+            const users = Array.isArray(p.users) ? p.users.map((u: any) => ({ ...u, id: String(u.id) })) : p.users;
+            return {
+              ...p,
+              id: String(p.id),
+              leadId: String(p.leadId ?? p.owner_id ?? p.lead_id ?? ''),
+              teamId: (p.teamId ?? p.team_id) != null ? String(p.teamId ?? p.team_id) : undefined,
+              usedHours: Math.max(0, Number(p.usedHours) || 0),
+              allocatedHours: Number(p.allocatedHours) || 0,
+              additionalHours: Number(p.additionalHours) || 0,
+              savedHours: p.savedHours != null ? Number(p.savedHours) : p.savedHours,
+              expectedSavedHours: p.expectedSavedHours != null ? Number(p.expectedSavedHours) : p.expectedSavedHours,
+              users,
+            } as any;
+          });
+          setProjects(normalizedProjects as any);
+          setTasks(tasksData);
+          setRiskIssues(riskIssuesData); // Store blockers/issues from backend
+          setToDos(toDosData);
+          setLeave(leaveData);
+          setAuditLogs(auditLogsData);
+          setSystemConfiguration(configData);
+          setProjectPhases(phasesData);
+          setDepartments(deptsData);
+          setRiskLevels(riskLevelsData);
+          setTools(toolsData);
+        } catch (err) {
+          const message = err instanceof Error ? err.message : 'An unknown error occurred.';
+          setError(`Failed to load dashboard data. Please try again later. (${message})`);
+          console.error(err);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      loadData();
+    }, []);
 
     const executiveSummary = useMemo((): ExecutiveSummary | null => {
         if (isLoading) {
@@ -251,41 +255,43 @@ const App: React.FC = () => {
             .filter(p => !projectsWithOpenIssues.has(p.id))
             .reduce((sum, p) => sum + p.allocatedHours, 0);
 
-        const openIssues = tasks.filter(t => t.type === 'issue' && t.status !== TaskStatus.Completed).length;
-        const totalMembers = teamMembers.length;
+    const openIssues = tasks.filter(t => t.type === 'issue' && t.status !== TaskStatus.Completed).length;
+    const openBlockers = tasks.filter(t => t.type === 'risk' && t.status !== TaskStatus.Completed).length;
+    const totalMembers = teamMembers.length;
         
-        const ragDistribution = { green: 0, yellow: 0, red: 0 };
-        projects.forEach(project => {
-            const projectTasks = tasks.filter(t => t.projectId === project.id);
-            const isBehind = projectTasks.some(t => new Date(t.deadline) < new Date() && t.status !== TaskStatus.Completed);
-            const isAtRisk = project.status === ProjectStatus.UserTesting || project.status === ProjectStatus.Update;
+    const ragDistribution = { green: 0, yellow: 0, red: 0 };
+    projects.forEach(project => {
+      const projectTasks = tasks.filter(t => t.projectId === project.id);
+      const isBehind = projectTasks.some(t => new Date(t.deadline) < new Date() && t.status !== TaskStatus.Completed);
+      const isAtRisk = project.status === ProjectStatus.UserTesting || project.status === ProjectStatus.Update;
             
-            if (isBehind) {
-                ragDistribution.red++;
-            } else if (isAtRisk) {
-                ragDistribution.yellow++;
-            } else {
-                ragDistribution.green++;
-            }
-        });
+      if (isBehind) {
+        ragDistribution.red++;
+      } else if (isAtRisk) {
+        ragDistribution.yellow++;
+      } else {
+        ragDistribution.green++;
+      }
+    });
 
-        const keyTrends = {
-            onTimeDeliveryPercent: 85,
-            hoursUtilizationPercent: 78,
-            issueResolutionTimeDays: 4.2,
-        };
+    const keyTrends = {
+      onTimeDeliveryPercent: 85,
+      hoursUtilizationPercent: 78,
+      issueResolutionTimeDays: 4.2,
+    };
 
-        return {
-            totalProjects: { 
-                value: { total: totalProjects, parent: parentProjectsCount, children: childProjectsCount }, 
-                changeText: "from live data" 
-            },
-            totalAllocatedHours: { value: totalAllocatedHours, changeText: "active projects" },
-            openIssues: { value: openIssues, changeText: "from live data" },
-            teamMembers: { value: totalMembers, changeText: "from live data" },
-            ragDistribution,
-            keyTrends,
-        };
+    return {
+      totalProjects: { 
+        value: { total: totalProjects, parent: parentProjectsCount, children: childProjectsCount }, 
+        changeText: "from live data" 
+      },
+      totalAllocatedHours: { value: totalAllocatedHours, changeText: "active projects" },
+      openIssues: { value: openIssues, changeText: "from live data" },
+      openBlockers: { value: openBlockers, changeText: "from live data" },
+      teamMembers: { value: totalMembers, changeText: "from live data" },
+      ragDistribution,
+      keyTrends,
+    };
     }, [projects, tasks, teamMembers, isLoading]);
 
   const handleLogin = async (username: string, password: string):Promise<void> => {
@@ -367,57 +373,57 @@ const App: React.FC = () => {
   };
 
   const updateTask = async (taskId: string, updates: Partial<Omit<Task, 'id'>>) => {
-    try {
-        const oldTask = tasks.find(t => t.id === taskId);
-        if (!oldTask) {
-            console.error("Task not found for update.");
-            return;
-        }
-
-        const updatedTask = await api.updateTask(taskId, updates);
-        
-        // NOTIFICATION LOGIC
-        if (
-            updates.status === TaskStatus.Completed &&
-            oldTask.status !== TaskStatus.Completed &&
-            (oldTask.type === 'issue')
-        ) {
-            const project = projectsById[oldTask.projectId];
-            if (project && project.leadId) {
-                const lead = membersById[project.leadId];
-                if (lead) {
-                    addNotification(
-                        `Issue "${updatedTask.title}" in project "${project.name}" has been resolved.`,
-                        lead.id,
-                        `project:${project.id}`
-                    );
-                }
-            }
-        }
-        
-        if (updates.assigneeId && updates.assigneeId !== oldTask.assigneeId) {
-            const assignee = membersById[updates.assigneeId as string];
-            const project = projectsById[updatedTask.projectId];
-            if (assignee && project) {
-                addNotification(
-                    `You have been assigned a ${updatedTask.type || 'task'}: "${updatedTask.title}" in project "${project.name}".`,
-                    assignee.id,
-                    `project:${project.id}`
-                );
-            }
-        }
-
-        const changedFields = Object.keys(updates).join(', ');
-        addAuditLog('Update Task', `updated "${oldTask.title}" with new: ${changedFields}`, oldTask.projectId);
-
-        setTasks(prevTasks =>
-          prevTasks.map(task =>
-            task.id === taskId ? updatedTask : task
-          )
-        );
-    } catch (err) {
-        console.error("Failed to update task:", err);
+  try {
+    const oldTask = tasks.find(t => t.id === taskId);
+    if (!oldTask) {
+      alert("Task not found for update. Please refresh the page or check your data.");
+      return;
     }
+
+    const updatedTask = await api.updateTask(taskId, updates);
+
+    // NOTIFICATION LOGIC
+    if (
+      updates.status === TaskStatus.Completed &&
+      oldTask.status !== TaskStatus.Completed &&
+      (oldTask.type === 'issue')
+    ) {
+      const project = projectsById[oldTask.projectId];
+      if (project && project.leadId) {
+        const lead = membersById[project.leadId];
+        if (lead) {
+          addNotification(
+            `Issue "${updatedTask.title}" in project "${project.name}" has been resolved.`,
+            lead.id,
+            `project:${project.id}`
+          );
+        }
+      }
+    }
+
+    if (updates.assigneeId && updates.assigneeId !== oldTask.assigneeId) {
+      const assignee = membersById[updates.assigneeId as string];
+      const project = projectsById[updatedTask.projectId];
+      if (assignee && project) {
+        addNotification(
+          `You have been assigned a ${updatedTask.type || 'task'}: "${updatedTask.title}" in project "${project.name}".`,
+          assignee.id,
+          `project:${project.id}`
+        );
+      }
+    }
+
+    const changedFields = Object.keys(updates).join(', ');
+    addAuditLog('Update Task', `updated "${oldTask.title}" with new: ${changedFields}`, oldTask.projectId);
+
+    setTasks(prevTasks =>
+      prevTasks.map(task =>
+      task.id === taskId ? updatedTask : task
+      )
+    );
+  } catch (err) {
+    console.error("Failed to update task:", err);
+  }
   };
 
   const handleCompleteTask = async (timeSpent: number, timeSaved: number, completionReference: string) => {
@@ -489,9 +495,10 @@ const App: React.FC = () => {
   };
 
   const handleOpenAddProjectModal = (parentId: string | null = null) => {
-      setAddProjectModalParentId(parentId);
-      setEditingProject(null);
-      setIsProjectModalOpen(true);
+  console.log('DEBUG: Opening AddProjectModal with parentId:', parentId);
+  setAddProjectModalParentId(parentId);
+  setEditingProject(null);
+  setIsProjectModalOpen(true);
   };
   
   const handleOpenEditProjectModal = (project: Project) => {
@@ -537,11 +544,12 @@ const App: React.FC = () => {
     status: 'Not started',
     owner_id: Number(projectData.leadId),
     team_id: teamIdNumber,
-  allocatedHours: Number(projectData.allocatedHours) || 0,
-  usedHours: 0,
+    allocatedHours: Number(projectData.allocatedHours) || 0,
+    usedHours: 0,
     beneficiary: projectData.beneficiary,
     created_at: now,
     // Optionally add other fields from projectData if needed
+    parentId: projectData.parentId ?? undefined,
   };
   const newProject = await api.addProject(apiProject);
   // Normalize for client usage
@@ -600,71 +608,53 @@ const App: React.FC = () => {
     assigneeId: string | null;
     reason?: string;
   }) => {
-    try {
-      if (editingRiskIssue) {
-        await updateTask(editingRiskIssue.id, {
-            title: data.title,
-            description: data.description,
-            type: data.type,
-            projectId: data.projectId,
-            priority: data.priority,
-            severity: data.severity,
-            deadline: data.deadline,
-            assigneeId: data.assigneeId,
-        });
-      } else {
-        const isRisk = data.type === 'risk';
-        const newTask: Omit<Task, 'id'> = {
-            title: data.title,
-            description: data.description,
-            type: data.type,
-            projectId: data.projectId,
-            priority: data.priority,
-            severity: data.severity,
-            deadline: data.deadline,
-            assigneeId: data.assigneeId,
-            status: TaskStatus.NotStarted,
-            statusReason: isRisk ? data.reason : undefined,
-            difficulty: 5, // default difficulty
-            endUserId: null,
+      try {
+        if (editingRiskIssue) {
+          // If editingRiskIssue is a task, update the task. Otherwise, update the risk/issue.
+          if (editingRiskIssue.type === 'task' || editingRiskIssue.type === 'subtask') {
+            await updateTask(editingRiskIssue.id, {
+                title: data.title,
+                description: data.description,
+                type: data.type,
+                projectId: data.projectId,
+                priority: data.priority,
+                severity: data.severity,
+                deadline: data.deadline,
+                assigneeId: data.assigneeId,
+            });
+          } else {
+            // Update risk/issue using backend API
+            await api.updateRiskIssue(editingRiskIssue.id, {
+                title: data.title,
+                description: data.description,
+                type: data.type,
+                projectId: data.projectId,
+                priority: data.priority,
+                severity: data.severity,
+                deadline: data.deadline,
+                assigneeId: data.assigneeId,
+                reason: data.reason,
+                lastUpdated: new Date().toISOString(),
+            });
+            // Refresh blockers/issues from backend
+            const updatedRiskIssues = await api.getRiskIssues();
+            setRiskIssues(updatedRiskIssues);
+          }
+        } else {
+          // Use backend API for blockers/issues
+          const addedRiskIssue = await api.addRiskIssue({
+            ...data,
+            status: 'Open',
             lastUpdated: new Date().toISOString(),
-        };
-        const addedTask = await api.addTask(newTask);
-        setTasks(prev => [...prev, addedTask]);
-        
-        const typeLabel = addedTask.type === 'risk' ? 'Blocked' : (addedTask.type || 'task');
-        addAuditLog(`Create ${typeLabel}`, `created new ${typeLabel}: "${addedTask.title}"`, addedTask.projectId);
-
-        const project = projectsById[addedTask.projectId];
-        if (project) {
-            // Notify assignee
-            if (addedTask.assigneeId) {
-                const assignee = membersById[addedTask.assigneeId];
-                if (assignee && assignee.id !== currentUser?.id) {
-                    addNotification(
-                        `You've been assigned a new ${typeLabel}: "${addedTask.title}" in project "${project.name}".`,
-                        assignee.id,
-                        `project:${project.id}`
-                    );
-                }
-            }
-            // Notify project lead
-            if (project.leadId && project.leadId !== addedTask.assigneeId && project.leadId !== currentUser?.id) {
-                const lead = membersById[project.leadId];
-                if (lead) {
-                    addNotification(
-                        `A new ${typeLabel} "${addedTask.title}" was created in your project "${project.name}".`,
-                        lead.id,
-                        `project:${project.id}`
-                    );
-                }
-            }
+          });
+          // Refresh blockers/issues from backend
+          const updatedRiskIssues = await api.getRiskIssues();
+          setRiskIssues(updatedRiskIssues);
         }
+        handleCloseRiskIssueModal();
+      } catch (err) {
+          console.error("Failed to save risk/issue:", err);
       }
-      handleCloseRiskIssueModal();
-    } catch (err) {
-        console.error("Failed to save risk/issue:", err);
-    }
   };
 
   const handleUpdateProject = async (projectId: string, updates: Partial<Omit<Project, 'id'>>) => {
@@ -1258,26 +1248,26 @@ const App: React.FC = () => {
   const renderContent = () => {
     if (viewingProjectId) {
         return (
-            <ProjectDetailView
-                projectId={viewingProjectId}
-                onBack={handleBackFromProjectView}
-                projects={projects}
-                tasks={tasks}
-                membersById={membersById}
-                auditLogs={auditLogs}
-                onUpdateProject={handleUpdateProject}
-                onDeleteProject={deleteProject}
-                onAddSubProject={() => handleOpenAddProjectModal(viewingProjectId)}
-                onOpenEditModal={handleOpenEditProjectModal}
-                onOpenAddRiskIssueModal={handleOpenAddRiskIssueModal}
-                currentUser={currentUser!}
-                onProjectTimerAction={handleProjectTimerAction}
-                onNavigateToRisksForProject={handleNavigateToRisksForProject}
-                onOpenCompleteProjectModal={handleOpenCompleteProjectModal}
-                onOpenNotSatisfiedModal={handleOpenNotSatisfiedModal}
-                onOpenCompletedBlockedModal={handleOpenCompletedBlockedModal}
-                onOpenSelectToolsModal={handleOpenSelectToolsModal}
-            />
+      <ProjectDetailView
+        projectId={viewingProjectId}
+        onBack={handleBackFromProjectView}
+        projects={projects}
+        tasks={[...tasks, ...riskIssues]}
+        membersById={membersById}
+        auditLogs={auditLogs}
+        onUpdateProject={handleUpdateProject}
+        onDeleteProject={deleteProject}
+        onAddSubProject={() => handleOpenAddProjectModal(viewingProjectId)}
+        onOpenEditModal={handleOpenEditProjectModal}
+        onOpenAddRiskIssueModal={handleOpenAddRiskIssueModal}
+        currentUser={currentUser!}
+        onProjectTimerAction={handleProjectTimerAction}
+        onNavigateToRisksForProject={handleNavigateToRisksForProject}
+        onOpenCompleteProjectModal={handleOpenCompleteProjectModal}
+        onOpenNotSatisfiedModal={handleOpenNotSatisfiedModal}
+        onOpenCompletedBlockedModal={handleOpenCompletedBlockedModal}
+        onOpenSelectToolsModal={handleOpenSelectToolsModal}
+      />
         );
     }
     
@@ -1305,20 +1295,20 @@ const App: React.FC = () => {
   const renderMainView = () => {
     switch (activeTab) {
       case 'dashboard':
-        return <ExecutiveDashboard 
-                    executiveSummary={executiveSummary}
-                    projects={projects}
-                    tasks={tasks}
-                    teamMembers={teamMembers}
-                    membersById={membersById}
-                    projectsById={projectsById}
-                    onSelectProject={handleSelectProject}
-                    onUpdateTask={updateTask}
-                    onCompleteTask={(task) => setCompletingTask(task)}
-                    onDeleteTask={deleteTask}
-                    currentUser={currentUser!}
-                    onOpenFile={handleOpenFile}
-                />;
+    return <ExecutiveDashboard 
+          executiveSummary={executiveSummary}
+          projects={projects}
+          tasks={[...tasks, ...riskIssues]}
+          teamMembers={teamMembers}
+          membersById={membersById}
+          projectsById={projectsById}
+          onSelectProject={handleSelectProject}
+          onUpdateTask={updateTask}
+          onCompleteTask={(task) => setCompletingTask(task)}
+          onDeleteTask={deleteTask}
+          currentUser={currentUser!}
+          onOpenFile={handleOpenFile}
+        />;
       case 'projects':
         return <ProjectsView
           projects={projects}
@@ -1378,17 +1368,17 @@ const App: React.FC = () => {
                     onSelectMember={handleSelectMember}
                 />;
       case 'risks-issues':
-        return <RisksAndIssuesView
-          tasks={tasks}
-          projectsById={projectsById}
-          membersById={membersById}
-          currentUser={currentUser!}
-          onAddRiskIssue={() => handleOpenAddRiskIssueModal()}
-          onEditRiskIssue={handleOpenEditRiskIssueModal}
-          onSelectProject={handleSelectProject}
-          projectIdFilter={riskIssueProjectFilterId}
-          onClearProjectFilter={handleClearRiskIssueProjectFilter}
-        />;
+          return <RisksAndIssuesView
+            tasks={riskIssues}
+            projectsById={projectsById}
+            membersById={membersById}
+            currentUser={currentUser!}
+            onAddRiskIssue={() => handleOpenAddRiskIssueModal()}
+            onEditRiskIssue={handleOpenEditRiskIssueModal}
+            onSelectProject={handleSelectProject}
+            projectIdFilter={riskIssueProjectFilterId}
+            onClearProjectFilter={handleClearRiskIssueProjectFilter}
+          />;
       case 'settings':
         return <SettingsView
             systemConfiguration={systemConfiguration}
